@@ -1,0 +1,23 @@
+services:
+  api:
+#    image: vasjajj/todo
+    build:
+      context: .
+      dockerfile: build/Dockerfile
+    ports:
+      - 8080:80
+  db:
+    image: mysql:8.0
+    cap_add:
+      - SYS_NICE
+    restart: always
+    environment:
+      - MYSQL_DATABASE=todo
+      - MYSQL_ROOT_PASSWORD=root
+    ports:
+      - 3306:3306
+    volumes:
+      - db:/var/lib/mysql
+volumes:
+  db:
+    driver: local
