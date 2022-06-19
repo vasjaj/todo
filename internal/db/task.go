@@ -61,3 +61,25 @@ func (d *Database) CompleteTask(taskID int) error {
 func (d *Database) UncompleteTask(taskID int) error {
 	return d.Model(&Task{}).Where("id = ?", taskID).Update("completed_at", nil).Error
 }
+
+type LabelTask struct {
+	gorm.Model
+	Label   Label
+	LabelID int `gorm:"index:label_id_task_id,unique"`
+	Task    Task
+	TaskID  int `gorm:"index:label_id_task_id,unique"`
+}
+
+func (d *Database) GetTasksByLabel(labelID int) ([]Task, error) {
+	var tasks []Task
+
+	return tasks, d.DB.Joins("JOIN label_tasks ON label_tasks.task_id = tasks.id").Where("label_tasks.label_id = ?", labelID).Find(&tasks).Error
+}
+
+func (d *Database) AddLabelToTask(labelID int, taskID int) error {
+	return d.DB.Create(&LabelTask{LabelID: labelID, TaskID: taskID}).Error
+}
+
+func (d *Database) RemoveLabelFromTask(labelID int, taskID int) error {
+	return d.Model(&LabelTask{}).Where("label_id = ? AND task_id = ?", labelID, taskID).Delete(&LabelTask{}).Error
+}

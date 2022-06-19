@@ -85,7 +85,7 @@ func (s *Server) createTaskComment(c echo.Context) error {
 }
 
 type getCommentResponse struct {
-	ID          uint      `json:"id"`
+	ID          uint      `json:"comment_id"`
 	TaskID      int       `json:"task_id"`
 	UserID      int       `json:"user_id"`
 	Title       string    `json:"title"`
@@ -109,11 +109,11 @@ func mapCommentToResponse(comment *db.Comment) *getCommentResponse {
 // @Tags comments
 // @Param Authorization header string true "Authorization"
 // @Param task_id path string true "Task ID"
-// @Param id path string true "Comment ID"
+// @Param comment_id path string true "Comment ID"
 // @Response 200 {object} server.getCommentResponse
-// @Router /tasks/{task_id}/comments/{id} [get]
+// @Router /tasks/{task_id}/comments/{comment_id} [get]
 func (s *Server) getTaskComment(c echo.Context) error {
-	commentID, err := strconv.Atoi(c.Param("id"))
+	commentID, err := strconv.Atoi(c.Param("comment_id"))
 	if err != nil {
 		log.Error(err)
 
@@ -135,32 +135,14 @@ func (s *Server) getTaskComment(c echo.Context) error {
 // @Tags comments
 // @Param Authorization header string true "Authorization"
 // @Param task_id path string true "Task ID"
-// @Param id path string true "Comment ID"
+// @Param comment_id path string true "Comment ID"
 // @Param comment body server.createCommentRequest true "Comment"
-// @Router /tasks/{task_id}/comments/{id} [put]
+// @Router /tasks/{task_id}/comments/{comment_id} [put]
 func (s *Server) updateTaskComment(c echo.Context) error {
-	commentID, err := strconv.Atoi(c.Param("id"))
+	comment, err := s.findComment(c)
 	if err != nil {
 		log.Error(err)
 
-		return echo.ErrBadRequest
-	}
-
-	comment, err := s.Database.GetComment(commentID)
-	if err != nil {
-		log.Error(err)
-
-		return echo.ErrBadRequest
-	}
-
-	userID, err := getUserID(c)
-	if err != nil {
-		log.Error(err)
-
-		return echo.ErrUnauthorized
-	}
-
-	if userID != comment.UserID {
 		return echo.ErrUnauthorized
 	}
 
@@ -171,7 +153,7 @@ func (s *Server) updateTaskComment(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	if err := s.Database.UpdateComment(commentID, req.Title, req.Description); err != nil {
+	if err := s.Database.UpdateComment(int(comment.ID), req.Title, req.Description); err != nil {
 		log.Error(err)
 
 		return echo.ErrInternalServerError
@@ -185,39 +167,50 @@ func (s *Server) updateTaskComment(c echo.Context) error {
 // @Tags comments
 // @Param Authorization header string true "Authorization"
 // @Param task_id path string true "Task ID"
-// @Param id path string true "Comment ID"
-// @Router /tasks/{task_id}/comments/{id} [delete]
+// @Param comment_id path string true "Comment ID"
+// @Router /tasks/{task_id}/comments/{comment_id} [delete]
 func (s *Server) deleteTaskComment(c echo.Context) error {
-	commentID, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		log.Error(err)
-
-		return echo.ErrBadRequest
-	}
-
-	comment, err := s.Database.GetComment(commentID)
-	if err != nil {
-		log.Error(err)
-
-		return echo.ErrBadRequest
-	}
-
-	userID, err := getUserID(c)
+	comment, err := s.findComment(c)
 	if err != nil {
 		log.Error(err)
 
 		return echo.ErrUnauthorized
 	}
 
-	if userID != comment.UserID {
-		return echo.ErrUnauthorized
-	}
-
-	if err := s.Database.DeleteComment(commentID); err != nil {
+	if err := s.Database.DeleteComment(int(comment.ID)); err != nil {
 		log.Error(err)
 
 		return echo.ErrInternalServerError
 	}
 
 	return c.JSON(http.StatusOK, echo.Map{})
+}
+
+func (s *Server) findComment(c echo.Context) (*db.Comment, error) {
+	commentID, err := strconv.Atoi(c.Param("comment_id"))
+	if err != nil {
+		log.Error(err)
+
+		return nil, err
+	}
+
+	comment, err := s.Database.GetComment(commentID)
+	if err != nil {
+		log.Error(err)
+
+		return nil, err
+	}
+
+	userID, err := getUserID(c)
+	if err != nil {
+		log.Error(err)
+
+		return nil, err
+	}
+
+	if userID != comment.UserID {
+		return nil, err
+	}
+
+	return comment, nil
 }

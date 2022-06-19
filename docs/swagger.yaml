@@ -209,6 +209,51 @@ paths:
       summary: Get tasks for label.
       tags:
       - labels
+  /labels/{id}/tasks/{task_id}:
+    delete:
+      description: Remove label from task.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Label ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      responses: {}
+      summary: Remove label from task.
+      tags:
+      - labels
+    get:
+      description: Add label to task.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Label ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      responses: {}
+      summary: Add label to task.
+      tags:
+      - labels
   /login:
     post:
       description: Login with username and password.

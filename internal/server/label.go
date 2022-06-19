@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -41,7 +42,7 @@ func (s *Server) getLabels(c echo.Context) error {
 }
 
 type getLabelResponse struct {
-	ID        uint   `json:"id"`
+	ID        uint   `json:"label_id"`
 	Title     string `json:"title"`
 	CreatedAt string `json:"createdAt"`
 }
@@ -91,32 +92,14 @@ func (s *Server) createLabel(c echo.Context) error {
 // @Description Get label.
 // @Tags labels
 // @Param Authorization header string true "Authorization"
-// @Param id path string true "Label ID"
+// @Param label_id path string true "Label ID"
 // @Response 200 {object} server.getLabelResponse
-// @Router /labels/{id} [get]
+// @Router /labels/{label_id} [get]
 func (s *Server) getLabel(c echo.Context) error {
-	labelID, err := strconv.Atoi(c.Param("id"))
+	label, err := s.findLabel(c)
 	if err != nil {
 		log.Error(err)
 
-		return echo.ErrBadRequest
-	}
-
-	userID, err := getUserID(c)
-	if err != nil {
-		log.Error(err)
-
-		return echo.ErrUnauthorized
-	}
-
-	label, err := s.Database.GetLabel(labelID)
-	if err != nil {
-		log.Error(err)
-
-		return echo.ErrBadRequest
-	}
-
-	if label.UserID != userID {
 		return echo.ErrUnauthorized
 	}
 
@@ -127,33 +110,15 @@ func (s *Server) getLabel(c echo.Context) error {
 // @Description Update label.
 // @Tags labels
 // @Param Authorization header string true "Authorization"
-// @Param id path string true "Label ID"
+// @Param label_id path string true "Label ID"
 // @Param label body server.createLabelRequest true "Label"
 // @Response 200 {object} server.getLabelResponse
-// @Router /labels/{id} [put]
+// @Router /labels/{label_id} [put]
 func (s *Server) updateLabel(c echo.Context) error {
-	labelID, err := strconv.Atoi(c.Param("id"))
+	label, err := s.findLabel(c)
 	if err != nil {
 		log.Error(err)
 
-		return echo.ErrBadRequest
-	}
-
-	label, err := s.Database.GetLabel(labelID)
-	if err != nil {
-		log.Error(err)
-
-		return echo.ErrBadRequest
-	}
-
-	userID, err := getUserID(c)
-	if err != nil {
-		log.Error(err)
-
-		return echo.ErrUnauthorized
-	}
-
-	if label.UserID != userID {
 		return echo.ErrUnauthorized
 	}
 
@@ -164,7 +129,7 @@ func (s *Server) updateLabel(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	if err := s.Database.UpdateLabel(labelID, req.Title); err != nil {
+	if err := s.Database.UpdateLabel(int(label.ID), req.Title); err != nil {
 		log.Error(err)
 
 		return echo.ErrInternalServerError
@@ -177,35 +142,17 @@ func (s *Server) updateLabel(c echo.Context) error {
 // @Description Delete label.
 // @Tags labels
 // @Param Authorization header string true "Authorization"
-// @Param id path string true "Label ID"
-// @Route /labels/{id} [delete]
+// @Param label_id path string true "Label ID"
+// @Route /labels/{label_id} [delete]
 func (s *Server) deleteLabel(c echo.Context) error {
-	labelID, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		log.Error(err)
-
-		return echo.ErrBadRequest
-	}
-
-	label, err := s.Database.GetLabel(labelID)
-	if err != nil {
-		log.Error(err)
-
-		return echo.ErrBadRequest
-	}
-
-	userID, err := getUserID(c)
+	label, err := s.findLabel(c)
 	if err != nil {
 		log.Error(err)
 
 		return echo.ErrUnauthorized
 	}
 
-	if label.UserID != userID {
-		return echo.ErrUnauthorized
-	}
-
-	if err := s.Database.DeleteLabel(labelID); err != nil {
+	if err := s.Database.DeleteLabel(int(label.ID)); err != nil {
 		log.Error(err)
 
 		return echo.ErrInternalServerError
@@ -218,36 +165,18 @@ func (s *Server) deleteLabel(c echo.Context) error {
 // @Description Get tasks for label.
 // @Tags labels
 // @Param Authorization header string true "Authorization"
-// @Param id path string true "Label ID"
+// @Param label_id path string true "Label ID"
 // @Response 200 {array} server.getTaskResponse
-// @Router /labels/{id}/tasks [get]
+// @Router /labels/{label_id}/tasks [get]
 func (s *Server) getTasksForLabel(c echo.Context) error {
-	labelID, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		log.Error(err)
-
-		return echo.ErrBadRequest
-	}
-
-	userID, err := getUserID(c)
+	label, err := s.findLabel(c)
 	if err != nil {
 		log.Error(err)
 
 		return echo.ErrUnauthorized
 	}
 
-	label, err := s.Database.GetLabel(labelID)
-	if err != nil {
-		log.Error(err)
-
-		return echo.ErrBadRequest
-	}
-
-	if label.UserID != userID {
-		return echo.ErrUnauthorized
-	}
-
-	tasks, err := s.Database.GetTasksForLabel(labelID)
+	tasks, err := s.Database.GetTasksByLabel(int(label.ID))
 	if err != nil {
 		log.Error(err)
 
@@ -262,122 +191,25 @@ func (s *Server) getTasksForLabel(c echo.Context) error {
 	return c.JSON(http.StatusOK, res)
 }
 
-// @Summary Add label to task.
-// @Description Add label to task.
-// @Tags labels
-// @Param Authorization header string true "Authorization"
-// @Param id path string true "Label ID"
-// @Param task_id path string true "Task ID"
-// @Route /labels/{id}/tasks/{task_id} [post]
-func (s *Server) addLabelToTask(c echo.Context) error {
-	labelID, err := strconv.Atoi(c.Param("id"))
+func (s *Server) findLabel(c echo.Context) (*db.Label, error) {
+	labelID, err := strconv.Atoi(c.Param("label_id"))
 	if err != nil {
-		log.Error(err)
-
-		return echo.ErrBadRequest
+		return nil, err
 	}
 
 	label, err := s.Database.GetLabel(labelID)
 	if err != nil {
-		log.Error(err)
-
-		return echo.ErrBadRequest
+		return nil, err
 	}
 
 	userID, err := getUserID(c)
 	if err != nil {
-		log.Error(err)
-
-		return echo.ErrUnauthorized
+		return nil, err
 	}
 
 	if label.UserID != userID {
-		return echo.ErrUnauthorized
+		return nil, errors.New("unauthorized")
 	}
 
-	taskID, err := strconv.Atoi(c.Param("task_id"))
-	if err != nil {
-		log.Error(err)
-
-		return echo.ErrBadRequest
-	}
-
-	task, err := s.Database.GetTask(taskID)
-	if err != nil {
-		log.Error(err)
-
-		return echo.ErrBadRequest
-	}
-
-	if task.UserID != userID {
-		return echo.ErrUnauthorized
-	}
-
-	if err := s.Database.AddLabelToTask(labelID, taskID); err != nil {
-		log.Error(err)
-
-		return echo.ErrInternalServerError
-	}
-
-	return c.JSON(http.StatusOK, echo.Map{})
-}
-
-// @Summary Remove label from task.
-// @Description Remove label from task.
-// @Tags labels
-// @Param Authorization header string true "Authorization"
-// @Param id path string true "Label ID"
-// @Param task_id path string true "Task ID"
-// @Route /labels/{id}/tasks/{task_id} [delete]
-func (s *Server) removeLabelFromTask(c echo.Context) error {
-	labelID, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		log.Error(err)
-
-		return echo.ErrBadRequest
-	}
-
-	label, err := s.Database.GetLabel(labelID)
-	if err != nil {
-		log.Error(err)
-
-		return echo.ErrBadRequest
-	}
-
-	userID, err := getUserID(c)
-	if err != nil {
-		log.Error(err)
-
-		return echo.ErrUnauthorized
-	}
-
-	if label.UserID != userID {
-		return echo.ErrUnauthorized
-	}
-
-	taskID, err := strconv.Atoi(c.Param("task_id"))
-	if err != nil {
-		log.Error(err)
-
-		return echo.ErrBadRequest
-	}
-
-	task, err := s.Database.GetTask(taskID)
-	if err != nil {
-		log.Error(err)
-
-		return echo.ErrBadRequest
-	}
-
-	if task.UserID != userID {
-		return echo.ErrUnauthorized
-	}
-
-	if err := s.Database.RemoveLabelFromTask(labelID, taskID); err != nil {
-		log.Error(err)
-
-		return echo.ErrInternalServerError
-	}
-
-	return c.JSON(http.StatusOK, echo.Map{})
+	return label, nil
 }
