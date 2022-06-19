@@ -15,6 +15,5 @@ docker-run-latest: docker-upload
 lint:
 	golangci-lint run
 
-init-swagger:
-	cd cmd
-	swag init -g ./internal/server/server.go -g ./internal/server/task.go
+swagger:
+	swag init -g internal/server/server.go

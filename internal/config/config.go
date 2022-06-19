@@ -11,6 +11,10 @@ import (
 type Config struct {
 	Server struct {
 		Listen string `yaml:"listen" validate:"required"`
+		JWT    struct {
+			Secret     string `yaml:"secret" validate:"required"`
+			SecondsTTL int    `yaml:"seconds_ttl" validate:"required"`
+		} `yaml:"jwt"`
 	} `yaml:"server"`
 	Database struct {
 		User     string `yaml:"user" validate:"required"`
@@ -29,8 +33,7 @@ func New(path string) (*Config, error) {
 		return nil, err
 	}
 	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
+		if err := file.Close(); err != nil {
 			log.Error(err)
 		}
 	}(file)
@@ -40,8 +43,7 @@ func New(path string) (*Config, error) {
 		return nil, err
 	}
 
-	err = validator.New().Struct(config)
-	if err != nil {
+	if err = validator.New().Struct(config); err != nil {
 		return nil, err
 	}
 

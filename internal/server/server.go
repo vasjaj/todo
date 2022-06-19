@@ -1,56 +1,80 @@
 package server
 
 import (
-	"net/http"
+	echoSwagger "github.com/swaggo/echo-swagger"
+	"github.com/vasjaj/todo/internal/config"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	echoSwagger "github.com/swaggo/echo-swagger"
 	"github.com/vasjaj/todo/internal/db"
 )
 
 type Server struct {
 	*echo.Echo
 	*db.Database
+	jwtConfig
+	listen string
 }
 
-// @title Swagger Example API
+type jwtConfig struct {
+	Secret     string `json:"secret"`
+	SecondsTTL int    `json:"seconds_ttl"`
+}
+
+// @title TODO API
 // @version 1.0
-// @description This is a sample server Petstore server.
-// @termsOfService http://swagger.io/terms/
+// @description This is a sample server TODO server.
 
-// @contact.name API Support
-// @contact.url http://www.swagger.io/support
-// @contact.email support@swagger.io
-
-// @license.name Apache 2.0
-// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-
-// @host petstore.swagger.io
-// @BasePath /v2
-func New(database *db.Database) *Server {
-	srv := &Server{echo.New(), database}
+// @host 127.0.0.1:8080
+// @BasePath /
+func New(database *db.Database, conf *config.Config) *Server {
+	srv := &Server{echo.New(), database, jwtConfig{conf.Server.JWT.Secret, conf.Server.JWT.SecondsTTL}, conf.Server.Listen}
 
 	srv.Use(middleware.Logger())
 	srv.Use(middleware.Recover())
 
-	srv.GET("/", srv.getTasks)
-	srv.GET("/tasks", srv.getTasks)
-	srv.POST("/tasks", srv.createTask)
-	srv.GET("/tasks/:id", srv.getTask)
-	srv.PUT("/tasks/:id", srv.updateTask)
-	srv.DELETE("/tasks/:id", srv.deleteTask)
-
 	srv.GET("/swagger/*", echoSwagger.WrapHandler)
+	srv.POST("/register", srv.register)
+	srv.POST("/login", srv.login)
+
+	restricted := srv.Group("")
+	restricted.Use(middleware.JWTWithConfig(middleware.JWTConfig{
+		SigningKey: []byte(srv.jwtConfig.Secret), Claims: &jwtCustomClaims{},
+	}))
+
+	tasks := restricted.Group("/tasks")
+	tasks.GET("", srv.getTasks)
+	tasks.GET("/comlpeted", srv.getCompletedTasks)
+	tasks.GET("/uncompleted", srv.getUncompletedTasks)
+	tasks.POST("", srv.createTask)
+	tasks.GET("/:id", srv.getTask)
+	tasks.PUT("/:id", srv.updateTask)
+	tasks.DELETE("/:id", srv.deleteTask)
+	tasks.POST("/:id/complete", srv.completeTask)
+	tasks.POST("/:id/uncomplete", srv.uncompleteTask)
+
+	comments := tasks.Group("/:task_id/comments")
+	comments.GET("", srv.getTaskComments)
+	comments.POST("", srv.createTaskComment)
+	comments.GET("/:id", srv.getTaskComment)
+	comments.PUT("/:id", srv.updateTaskComment)
+	comments.DELETE("/:id", srv.deleteTaskComment)
+
+	labels := restricted.Group("/labels")
+	labels.GET("", srv.getLabels)
+	labels.POST("", srv.createLabel)
+	labels.GET("/:id", srv.getLabel)
+	labels.PUT("/:id", srv.updateLabel)
+	labels.DELETE("/:id", srv.deleteLabel)
+
+	labelTasks := labels.Group("/:label_id/tasks")
+	labelTasks.GET("", srv.getTasksForLabel)
+	labelTasks.POST("/:task_id", srv.addLabelToTask)
+	labelTasks.DELETE("/:task_id", srv.removeLabelFromTask)
 
 	return srv
 }
 
-func (s *Server) Run(address string) {
-	s.Logger.Fatal(s.Start(address))
-}
-
-// Handler
-func (s *Server) hello(c echo.Context) error {
-	return c.String(http.StatusOK, "Hello, World!")
+func (s *Server) Run() error {
+	return s.Start(s.listen)
 }

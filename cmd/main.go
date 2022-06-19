@@ -3,15 +3,16 @@ package main
 import (
 	"os"
 
-	"github.com/vasjaj/todo/internal/db"
-
 	log "github.com/sirupsen/logrus"
-	_ "github.com/vasjaj/todo/cmd/docs"
+	_ "github.com/vasjaj/todo/docs"
 	"github.com/vasjaj/todo/internal/config"
+	"github.com/vasjaj/todo/internal/db"
 	"github.com/vasjaj/todo/internal/server"
 )
 
 func main() {
+	log.SetLevel(log.InfoLevel)
+
 	path := os.Args[1]
 	log.Info("Config file path: ", path)
 
@@ -20,11 +21,10 @@ func main() {
 		log.Fatal("Failed to load config: ", err)
 	}
 
-	db, err := db.New(conf)
+	database, err := db.New(conf)
 	if err != nil {
 		log.Fatal("Failed to init database: ", err)
 	}
 
-	srv := server.New(db)
-	srv.Run(conf.Server.Listen)
+	log.Fatal("Failed to run server: ", server.New(database, conf).Run())
 }

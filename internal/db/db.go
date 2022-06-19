@@ -13,7 +13,7 @@ type Database struct {
 }
 
 func New(conf *config.Config) (*Database, error) {
-	gormDB, err := gorm.Open(mysql.Open(fmt.Sprintf("%s:%s@tcp(%s:%d)/%s",
+	gormDB, err := gorm.Open(mysql.Open(fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true",
 		conf.Database.User,
 		conf.Database.Password,
 		conf.Database.Host,
@@ -23,8 +23,7 @@ func New(conf *config.Config) (*Database, error) {
 		return nil, err
 	}
 
-	err = gormDB.AutoMigrate(&Task{})
-	if err != nil {
+	if err := gormDB.AutoMigrate(&Task{}, &User{}); err != nil {
 		return nil, err
 	}
 

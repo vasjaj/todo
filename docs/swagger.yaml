@@ -1,20 +1,537 @@
+basePath: /
+definitions:
+  server.LoginRequest:
+    properties:
+      login:
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - login
+    type: object
+  server.RegisterRequest:
+    properties:
+      login:
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - login
+    type: object
+  server.createCommentRequest:
+    properties:
+      description:
+        type: string
+      title:
+        type: string
+    required:
+    - description
+    - title
+    type: object
+  server.createLabelRequest:
+    properties:
+      title:
+        type: string
+    required:
+    - title
+    type: object
+  server.createTaskRequest:
+    properties:
+      description:
+        type: string
+      dueDate:
+        type: string
+      title:
+        type: string
+    required:
+    - description
+    - title
+    type: object
+  server.getCommentResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      task_id:
+        type: integer
+      title:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  server.getLabelResponse:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+    type: object
+  server.getTaskResponse:
+    properties:
+      completedAt:
+        type: string
+      createdAt:
+        type: string
+      description:
+        type: string
+      dueDate:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+    type: object
+host: 127.0.0.1:8080
 info:
   contact: {}
+  description: This is a sample server TODO server.
+  title: TODO API
+  version: "1.0"
 paths:
-  /:
+  /labels:
     get:
-      consumes:
-      - '*/*'
-      description: get the status of server.
-      produces:
-      - application/json
+      description: Get all labels.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
-      summary: Show the status of server.
+            items:
+              $ref: '#/definitions/server.getLabelResponse'
+            type: array
+      summary: Get labels.
       tags:
-      - root
+      - labels
+    post:
+      description: Create label.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Label
+        in: body
+        name: label
+        required: true
+        schema:
+          $ref: '#/definitions/server.createLabelRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.getLabelResponse'
+      summary: Create label.
+      tags:
+      - labels
+  /labels/{id}:
+    get:
+      description: Get label.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Label ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.getLabelResponse'
+      summary: Get label.
+      tags:
+      - labels
+    put:
+      description: Update label.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Label ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Label
+        in: body
+        name: label
+        required: true
+        schema:
+          $ref: '#/definitions/server.createLabelRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.getLabelResponse'
+      summary: Update label.
+      tags:
+      - labels
+  /labels/{id}/tasks:
+    get:
+      description: Get tasks for label.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Label ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/server.getTaskResponse'
+            type: array
+      summary: Get tasks for label.
+      tags:
+      - labels
+  /login:
+    post:
+      description: Login with username and password.
+      parameters:
+      - description: Login request
+        in: body
+        name: login
+        required: true
+        schema:
+          $ref: '#/definitions/server.LoginRequest'
+      responses: {}
+      summary: System login.
+      tags:
+      - user
+  /register:
+    post:
+      description: Register with username and password.
+      parameters:
+      - description: Register request
+        in: body
+        name: register
+        required: true
+        schema:
+          $ref: '#/definitions/server.RegisterRequest'
+      responses: {}
+      summary: System register.
+      tags:
+      - user
+  /tasks:
+    get:
+      description: Get all tasks.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/server.getTaskResponse'
+            type: array
+      summary: Get tasks.
+      tags:
+      - tasks
+    post:
+      description: Create one task.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Task
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/server.createTaskRequest'
+      responses: {}
+      summary: Create task.
+      tags:
+      - tasks
+  /tasks/{id}:
+    delete:
+      description: Delete one task.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses: {}
+      summary: Delete task.
+      tags:
+      - tasks
+    get:
+      description: Get one task.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.getTaskResponse'
+      summary: Get task.
+      tags:
+      - tasks
+    put:
+      description: Update one task.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Task
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/server.createTaskRequest'
+      responses: {}
+      summary: Update task.
+      tags:
+      - tasks
+  /tasks/{id}/complete:
+    post:
+      description: Complete one task.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses: {}
+      summary: Complete task.
+      tags:
+      - tasks
+  /tasks/{id}/uncomplete:
+    post:
+      description: uncomplete one task.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses: {}
+      summary: uncomplete task.
+      tags:
+      - tasks
+  /tasks/{task_id}/comments:
+    get:
+      description: Get comments by task.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/server.getCommentResponse'
+            type: array
+      summary: Get task comments.
+      tags:
+      - comments
+    post:
+      description: Create one comment.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      - description: Comment
+        in: body
+        name: comment
+        required: true
+        schema:
+          $ref: '#/definitions/server.createCommentRequest'
+      responses: {}
+      summary: Create task comment.
+      tags:
+      - comments
+  /tasks/{task_id}/comments/{id}:
+    delete:
+      description: Delete one comment.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses: {}
+      summary: Delete task comment.
+      tags:
+      - comments
+    get:
+      description: Get one comment.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.getCommentResponse'
+      summary: Get task comment.
+      tags:
+      - comments
+    put:
+      description: Update one comment.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Comment
+        in: body
+        name: comment
+        required: true
+        schema:
+          $ref: '#/definitions/server.createCommentRequest'
+      responses: {}
+      summary: Update comment.
+      tags:
+      - comments
+  /tasks/completed:
+    get:
+      description: Get all completed tasks.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/server.getTaskResponse'
+            type: array
+      summary: Get completed tasks.
+      tags:
+      - tasks
+  /tasks/uncompleted:
+    get:
+      description: Get all uncompleted tasks.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/server.getTaskResponse'
+            type: array
+      summary: Get uncompleted tasks.
+      tags:
+      - tasks
 swagger: "2.0"
