@@ -12,7 +12,7 @@ import (
 )
 
 // @Summary Get task comments.
-// @Description Get comments by task.
+// @Description Get comments for task by Task ID.
 // @Tags comments
 // @Param Authorization header string true "Authorization"
 // @Param task_id path string true "Task ID"
@@ -26,7 +26,7 @@ func (s *Server) getTaskComments(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	comments, err := s.Database.GetComments(taskID)
+	comments, err := s.db.GetComments(taskID)
 	if err != nil {
 		log.Error(err)
 
@@ -47,7 +47,7 @@ type createCommentRequest struct {
 }
 
 // @Summary Create task comment.
-// @Description Create one comment.
+// @Description Create comment for task by Task ID.
 // @Tags comments
 // @Param Authorization header string true "Authorization"
 // @Param task_id path string true "Task ID"
@@ -75,7 +75,7 @@ func (s *Server) createTaskComment(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	if err := s.Database.CreateComment(taskID, userID, req.Title, req.Description); err != nil {
+	if err := s.db.CreateComment(taskID, userID, req.Title, req.Description); err != nil {
 		log.Error(err)
 
 		return echo.ErrInternalServerError
@@ -105,7 +105,7 @@ func mapCommentToResponse(comment *db.Comment) *getCommentResponse {
 }
 
 // @Summary Get task comment.
-// @Description Get one comment.
+// @Description Get task comment by Task ID and Comment ID.
 // @Tags comments
 // @Param Authorization header string true "Authorization"
 // @Param task_id path string true "Task ID"
@@ -120,7 +120,7 @@ func (s *Server) getTaskComment(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	comment, err := s.Database.GetComment(commentID)
+	comment, err := s.db.GetComment(commentID)
 	if err != nil {
 		log.Error(err)
 
@@ -131,7 +131,7 @@ func (s *Server) getTaskComment(c echo.Context) error {
 }
 
 // @Summary Update comment.
-// @Description Update one comment.
+// @Description Update task comment by Task ID and Comment ID.
 // @Tags comments
 // @Param Authorization header string true "Authorization"
 // @Param task_id path string true "Task ID"
@@ -153,7 +153,7 @@ func (s *Server) updateTaskComment(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	if err := s.Database.UpdateComment(int(comment.ID), req.Title, req.Description); err != nil {
+	if err := s.db.UpdateComment(int(comment.ID), req.Title, req.Description); err != nil {
 		log.Error(err)
 
 		return echo.ErrInternalServerError
@@ -162,8 +162,8 @@ func (s *Server) updateTaskComment(c echo.Context) error {
 	return c.JSON(http.StatusOK, echo.Map{})
 }
 
-// @Summary Delete task comment.
-// @Description Delete one comment.
+// @Summary Delete comment from task.
+// @Description Delete task comment by Task ID and Comment ID.
 // @Tags comments
 // @Param Authorization header string true "Authorization"
 // @Param task_id path string true "Task ID"
@@ -177,7 +177,7 @@ func (s *Server) deleteTaskComment(c echo.Context) error {
 		return echo.ErrUnauthorized
 	}
 
-	if err := s.Database.DeleteComment(int(comment.ID)); err != nil {
+	if err := s.db.DeleteComment(int(comment.ID)); err != nil {
 		log.Error(err)
 
 		return echo.ErrInternalServerError
@@ -194,7 +194,7 @@ func (s *Server) findComment(c echo.Context) (*db.Comment, error) {
 		return nil, err
 	}
 
-	comment, err := s.Database.GetComment(commentID)
+	comment, err := s.db.GetComment(commentID)
 	if err != nil {
 		log.Error(err)
 

@@ -78,7 +78,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/labels/{id}": {
+        "/labels/{label_id}": {
             "get": {
                 "description": "Get label.",
                 "tags": [
@@ -96,7 +96,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Label ID",
-                        "name": "id",
+                        "name": "label_id",
                         "in": "path",
                         "required": true
                     }
@@ -127,7 +127,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Label ID",
-                        "name": "id",
+                        "name": "label_id",
                         "in": "path",
                         "required": true
                     },
@@ -151,7 +151,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/labels/{id}/tasks": {
+        "/labels/{label_id}/tasks": {
             "get": {
                 "description": "Get tasks for label.",
                 "tags": [
@@ -169,7 +169,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Label ID",
-                        "name": "id",
+                        "name": "label_id",
                         "in": "path",
                         "required": true
                     }
@@ -185,70 +185,6 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/labels/{id}/tasks/{task_id}": {
-            "get": {
-                "description": "Add label to task.",
-                "tags": [
-                    "labels"
-                ],
-                "summary": "Add label to task.",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Label ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Task ID",
-                        "name": "task_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {}
-            },
-            "delete": {
-                "description": "Remove label from task.",
-                "tags": [
-                    "labels"
-                ],
-                "summary": "Remove label from task.",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Label ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Task ID",
-                        "name": "task_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {}
             }
         },
         "/login": {
@@ -322,7 +258,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Create one task.",
+                "description": "Create one task, time format - 2018-12-10T13:49:51.141Z.",
                 "tags": [
                     "tasks"
                 ],
@@ -406,7 +342,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/tasks/{id}": {
+        "/tasks/{task_id}": {
             "get": {
                 "description": "Get one task.",
                 "tags": [
@@ -424,7 +360,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Task ID",
-                        "name": "id",
+                        "name": "task_id",
                         "in": "path",
                         "required": true
                     }
@@ -455,7 +391,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Task ID",
-                        "name": "id",
+                        "name": "task_id",
                         "in": "path",
                         "required": true
                     },
@@ -488,59 +424,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Task ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {}
-            }
-        },
-        "/tasks/{id}/complete": {
-            "post": {
-                "description": "Complete one task.",
-                "tags": [
-                    "tasks"
-                ],
-                "summary": "Complete task.",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Task ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {}
-            }
-        },
-        "/tasks/{id}/uncomplete": {
-            "post": {
-                "description": "uncomplete one task.",
-                "tags": [
-                    "tasks"
-                ],
-                "summary": "uncomplete task.",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Authorization",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Task ID",
-                        "name": "id",
+                        "name": "task_id",
                         "in": "path",
                         "required": true
                     }
@@ -550,7 +434,7 @@ const docTemplate = `{
         },
         "/tasks/{task_id}/comments": {
             "get": {
-                "description": "Get comments by task.",
+                "description": "Get comments for task by Task ID.",
                 "tags": [
                     "comments"
                 ],
@@ -584,7 +468,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Create one comment.",
+                "description": "Create comment for task by Task ID.",
                 "tags": [
                     "comments"
                 ],
@@ -617,9 +501,9 @@ const docTemplate = `{
                 "responses": {}
             }
         },
-        "/tasks/{task_id}/comments/{id}": {
+        "/tasks/{task_id}/comments/{comment_id}": {
             "get": {
-                "description": "Get one comment.",
+                "description": "Get task comment by Task ID and Comment ID.",
                 "tags": [
                     "comments"
                 ],
@@ -642,7 +526,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Comment ID",
-                        "name": "id",
+                        "name": "comment_id",
                         "in": "path",
                         "required": true
                     }
@@ -657,7 +541,7 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "Update one comment.",
+                "description": "Update task comment by Task ID and Comment ID.",
                 "tags": [
                     "comments"
                 ],
@@ -680,7 +564,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Comment ID",
-                        "name": "id",
+                        "name": "comment_id",
                         "in": "path",
                         "required": true
                     },
@@ -697,11 +581,11 @@ const docTemplate = `{
                 "responses": {}
             },
             "delete": {
-                "description": "Delete one comment.",
+                "description": "Delete task comment by Task ID and Comment ID.",
                 "tags": [
                     "comments"
                 ],
-                "summary": "Delete task comment.",
+                "summary": "Delete comment from task.",
                 "parameters": [
                     {
                         "type": "string",
@@ -720,7 +604,125 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Comment ID",
-                        "name": "id",
+                        "name": "comment_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/tasks/{task_id}/complete": {
+            "post": {
+                "description": "Complete one task.",
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Complete task.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Task ID",
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/tasks/{task_id}/labels/{label_id}": {
+            "post": {
+                "description": "Add label to task.",
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Add label to task.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Task ID",
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Label ID",
+                        "name": "label_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/tasks/{task_id}/labels/{label_id}/": {
+            "delete": {
+                "description": "Remove label from task.",
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Remove label from task.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Task ID",
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Label ID",
+                        "name": "label_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/tasks/{task_id}/uncomplete": {
+            "post": {
+                "description": "uncomplete one task.",
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "uncomplete task.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Task ID",
+                        "name": "task_id",
                         "in": "path",
                         "required": true
                     }
@@ -807,14 +809,14 @@ const docTemplate = `{
         "server.getCommentResponse": {
             "type": "object",
             "properties": {
+                "comment_id": {
+                    "type": "integer"
+                },
                 "created_at": {
                     "type": "string"
                 },
                 "description": {
                     "type": "string"
-                },
-                "id": {
-                    "type": "integer"
                 },
                 "task_id": {
                     "type": "integer"
@@ -833,7 +835,7 @@ const docTemplate = `{
                 "createdAt": {
                     "type": "string"
                 },
-                "id": {
+                "label_id": {
                     "type": "integer"
                 },
                 "title": {
@@ -856,7 +858,7 @@ const docTemplate = `{
                 "dueDate": {
                     "type": "string"
                 },
-                "id": {
+                "task_id": {
                     "type": "integer"
                 },
                 "title": {

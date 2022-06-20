@@ -26,5 +26,9 @@ func main() {
 		log.Fatal("Failed to init database: ", err)
 	}
 
-	log.Fatal("Failed to run server: ", server.New(database, conf).Run())
+	log.Error("Failed to run server: ", server.New(database, conf).Run())
+
+	if err := database.Close(); err != nil {
+		log.Error(err)
+	}
 }

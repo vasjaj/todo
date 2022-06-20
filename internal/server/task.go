@@ -26,7 +26,7 @@ func (s *Server) getTasks(c echo.Context) error {
 		return echo.ErrUnauthorized
 	}
 
-	tasks, err := s.Database.GetTasks(userID)
+	tasks, err := s.db.GetTasks(userID)
 	if err != nil {
 		log.Error(err)
 
@@ -61,7 +61,7 @@ func (s *Server) getCompletedTasks(c echo.Context) error {
 		return echo.ErrUnauthorized
 	}
 
-	tasks, err := s.Database.GetCompletedTasks(userID)
+	tasks, err := s.db.GetCompletedTasks(userID)
 	if err != nil {
 		log.Error(err)
 
@@ -90,7 +90,7 @@ func (s *Server) getUncompletedTasks(c echo.Context) error {
 		return echo.ErrUnauthorized
 	}
 
-	tasks, err := s.Database.GetUncompletedTasks(userID)
+	tasks, err := s.db.GetUncompletedTasks(userID)
 	if err != nil {
 		log.Error(err)
 
@@ -106,7 +106,7 @@ func (s *Server) getUncompletedTasks(c echo.Context) error {
 }
 
 // @Summary Create task.
-// @Description Create one task.
+// @Description Create one task, time format - 2018-12-10T13:49:51.141Z.
 // @Tags tasks
 // @Param Authorization header string true "Authorization"
 // @Param task body server.createTaskRequest true "Task"
@@ -126,7 +126,7 @@ func (s *Server) createTask(c echo.Context) error {
 		return echo.ErrUnauthorized
 	}
 
-	if err := s.Database.CreateTask(userID, req.Title, req.Description, req.DueDate); err != nil {
+	if err := s.db.CreateTask(userID, req.Title, req.Description, req.DueDate); err != nil {
 		log.Error(err)
 
 		return echo.ErrInternalServerError
@@ -195,7 +195,7 @@ func (s *Server) updateTask(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	if err := s.Database.UpdateTask(int(task.ID), req.Title, req.Description, req.DueDate); err != nil {
+	if err := s.db.UpdateTask(int(task.ID), req.Title, req.Description, req.DueDate); err != nil {
 		log.Error(err)
 
 		return echo.ErrInternalServerError
@@ -218,7 +218,7 @@ func (s *Server) deleteTask(c echo.Context) error {
 		return echo.ErrUnauthorized
 	}
 
-	if err := s.Database.DeleteTask(int(task.ID)); err != nil {
+	if err := s.db.DeleteTask(int(task.ID)); err != nil {
 		log.Error(err)
 
 		return echo.ErrInternalServerError
@@ -241,7 +241,7 @@ func (s *Server) completeTask(c echo.Context) error {
 		return echo.ErrUnauthorized
 	}
 
-	if err := s.Database.CompleteTask(int(task.ID)); err != nil {
+	if err := s.db.CompleteTask(int(task.ID)); err != nil {
 		log.Error(err)
 
 		return echo.ErrInternalServerError
@@ -264,7 +264,7 @@ func (s *Server) uncompleteTask(c echo.Context) error {
 		return echo.ErrUnauthorized
 	}
 
-	if err := s.Database.UncompleteTask(int(task.ID)); err != nil {
+	if err := s.db.UncompleteTask(int(task.ID)); err != nil {
 		log.Error(err)
 
 		return echo.ErrInternalServerError
@@ -275,11 +275,11 @@ func (s *Server) uncompleteTask(c echo.Context) error {
 
 // @Summary Add label to task.
 // @Description Add label to task.
-// @Tags labels
+// @Tags tasks
 // @Param Authorization header string true "Authorization"
 // @Param task_id path string true "Task ID"
 // @Param label_id path string true "Label ID"
-// @Router /tasks/{task_id}/labels/{label_id} [get]
+// @Router /tasks/{task_id}/labels/{label_id} [post]
 func (s *Server) addLabelToTask(c echo.Context) error {
 	label, err := s.findLabel(c)
 	if err != nil {
@@ -295,7 +295,7 @@ func (s *Server) addLabelToTask(c echo.Context) error {
 		return echo.ErrUnauthorized
 	}
 
-	if err := s.Database.AddLabelToTask(int(label.ID), int(task.ID)); err != nil {
+	if err := s.db.AddLabelToTask(int(label.ID), int(task.ID)); err != nil {
 		log.Error(err)
 
 		return echo.ErrInternalServerError
@@ -306,11 +306,11 @@ func (s *Server) addLabelToTask(c echo.Context) error {
 
 // @Summary Remove label from task.
 // @Description Remove label from task.
-// @Tags labels
+// @Tags tasks
 // @Param Authorization header string true "Authorization"
 // @Param task_id path string true "Task ID"
 // @Param label_id path string true "Label ID"
-// @Router tasks/{task_id}/labels/{label_id}/ [delete]
+// @Router /tasks/{task_id}/labels/{label_id}/ [delete]
 func (s *Server) removeLabelFromTask(c echo.Context) error {
 	label, err := s.findLabel(c)
 	if err != nil {
@@ -326,7 +326,7 @@ func (s *Server) removeLabelFromTask(c echo.Context) error {
 		return echo.ErrUnauthorized
 	}
 
-	if err := s.Database.RemoveLabelFromTask(int(label.ID), int(task.ID)); err != nil {
+	if err := s.db.RemoveLabelFromTask(int(label.ID), int(task.ID)); err != nil {
 		log.Error(err)
 
 		return echo.ErrInternalServerError
@@ -341,7 +341,7 @@ func (s *Server) findTask(c echo.Context) (*db.Task, error) {
 		return nil, err
 	}
 
-	task, err := s.Database.GetTask(taskID)
+	task, err := s.db.GetTask(taskID)
 	if err != nil {
 		return nil, err
 	}

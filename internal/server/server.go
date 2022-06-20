@@ -1,17 +1,18 @@
 package server
 
 import (
+	log "github.com/sirupsen/logrus"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"github.com/vasjaj/todo/internal/config"
+	"github.com/vasjaj/todo/internal/db"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/vasjaj/todo/internal/db"
 )
 
 type Server struct {
 	*echo.Echo
-	*db.Database
+	db db.Database
 	jwtConfig
 	listen string
 }
@@ -27,11 +28,13 @@ type jwtConfig struct {
 
 // @host 127.0.0.1:8080
 // @BasePath /
-func New(database *db.Database, conf *config.Config) *Server {
+func New(database db.Database, conf *config.Config) *Server {
 	srv := &Server{echo.New(), database, jwtConfig{conf.Server.JWT.Secret, conf.Server.JWT.SecondsTTL}, conf.Server.Listen}
 
 	srv.Use(middleware.Logger())
 	srv.Use(middleware.Recover())
+
+	srv.GET("/health", srv.health)
 
 	srv.GET("/swagger/*", echoSwagger.WrapHandler)
 	srv.POST("/register", srv.register)
@@ -66,15 +69,28 @@ func New(database *db.Database, conf *config.Config) *Server {
 
 	labels := restricted.Group("/labels")
 	labels.GET("", srv.getLabels)
-	labels.GET("/tasks", srv.getTasksForLabel)
 	labels.POST("", srv.createLabel)
 	labels.GET("/:label_id", srv.getLabel)
 	labels.PUT("/:label_id", srv.updateLabel)
 	labels.DELETE("/:label_id", srv.deleteLabel)
+	labels.GET("/:label_id/tasks", srv.getTasksForLabel)
 
 	return srv
 }
 
 func (s *Server) Run() error {
 	return s.Start(s.listen)
+}
+
+func (s *Server) health(c echo.Context) error {
+	err := s.db.Ping()
+	if err != nil {
+		log.Error("Healthcheck failed: ", err)
+
+		return echo.ErrInternalServerError
+	}
+
+	log.Info("Healthcheck succeeded")
+
+	return c.String(200, "OK")
 }

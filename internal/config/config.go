@@ -9,20 +9,24 @@ import (
 )
 
 type Config struct {
-	Server struct {
-		Listen string `yaml:"listen" validate:"required"`
-		JWT    struct {
-			Secret     string `yaml:"secret" validate:"required"`
-			SecondsTTL int    `yaml:"seconds_ttl" validate:"required"`
-		} `yaml:"jwt"`
-	} `yaml:"server"`
-	Database struct {
-		User     string `yaml:"user" validate:"required"`
-		Password string `yaml:"password" validate:"required"`
-		Host     string `yaml:"host" validate:"required"`
-		Port     int    `yaml:"port" validate:"required"`
-		Name     string `yaml:"name" validate:"required"`
-	} `yaml:"database"`
+	Server   `yaml:"server"`
+	Database `yaml:"database"`
+}
+
+type Server struct {
+	Listen string `yaml:"listen" validate:"required"`
+	JWT    struct {
+		Secret     string `yaml:"secret" validate:"required"`
+		SecondsTTL int    `yaml:"seconds_ttl" validate:"required"`
+	} `yaml:"jwt"`
+}
+
+type Database struct {
+	User     string `yaml:"user" validate:"required"`
+	Password string `yaml:"password" validate:"required"`
+	Host     string `yaml:"host" validate:"required"`
+	Port     int    `yaml:"port" validate:"required"`
+	Name     string `yaml:"name" validate:"required"`
 }
 
 func New(path string) (*Config, error) {

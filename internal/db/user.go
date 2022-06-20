@@ -11,7 +11,7 @@ type User struct {
 	PasswordHash string
 }
 
-func (d *Database) GetUser(login string) (*User, error) {
+func (d *db) GetUser(login string) (*User, error) {
 	user := &User{}
 	if err := d.DB.Where("login = ?", login).First(user).Error; err != nil {
 		return nil, err
@@ -20,7 +20,7 @@ func (d *Database) GetUser(login string) (*User, error) {
 	return user, nil
 }
 
-func (d *Database) CreateUser(login string, password string) (*User, error) {
+func (d *db) CreateUser(login string, password string) (*User, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	if err != nil {
 		return nil, err

@@ -14,19 +14,19 @@ type Comment struct {
 	Description string
 }
 
-func (d *Database) GetComment(id int) (*Comment, error) {
+func (d *db) GetComment(id int) (*Comment, error) {
 	comment := &Comment{}
 
 	return comment, d.DB.Where("id = ?", id).First(comment).Error
 }
 
-func (d *Database) GetComments(taskID int) ([]Comment, error) {
+func (d *db) GetComments(taskID int) ([]Comment, error) {
 	var comments []Comment
 
 	return comments, d.DB.Where("task_id = ?", taskID).Find(&comments).Error
 }
 
-func (d *Database) CreateComment(userID int, taskID int, title string, description string) error {
+func (d *db) CreateComment(userID int, taskID int, title string, description string) error {
 	return d.DB.Create(&Comment{
 		UserID:      userID,
 		TaskID:      taskID,
@@ -35,12 +35,12 @@ func (d *Database) CreateComment(userID int, taskID int, title string, descripti
 	}).Error
 }
 
-func (d *Database) UpdateComment(id int, title string, description string) error {
+func (d *db) UpdateComment(id int, title string, description string) error {
 	return d.Model(&Comment{}).Where("id = ?", id).Updates(map[string]interface{}{
 		"title": title, "description": description,
 	}).Error
 }
 
-func (d *Database) DeleteComment(id int) error {
+func (d *db) DeleteComment(id int) error {
 	return d.Model(&Comment{}).Where("id = ?", id).Delete(&Comment{}).Error
 }

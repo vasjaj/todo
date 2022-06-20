@@ -39,7 +39,7 @@ func (s *Server) register(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	user, err := s.Database.CreateUser(req.Login, req.Password)
+	user, err := s.db.CreateUser(req.Login, req.Password)
 	if err != nil {
 		log.Error(err)
 
@@ -80,7 +80,7 @@ func (s *Server) login(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	user, err := s.Database.GetUser(req.Login)
+	user, err := s.db.GetUser(req.Login)
 	if err != nil {
 		log.Error(err)
 

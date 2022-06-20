@@ -51,12 +51,12 @@ definitions:
     type: object
   server.getCommentResponse:
     properties:
+      comment_id:
+        type: integer
       created_at:
         type: string
       description:
         type: string
-      id:
-        type: integer
       task_id:
         type: integer
       title:
@@ -68,7 +68,7 @@ definitions:
     properties:
       createdAt:
         type: string
-      id:
+      label_id:
         type: integer
       title:
         type: string
@@ -83,7 +83,7 @@ definitions:
         type: string
       dueDate:
         type: string
-      id:
+      task_id:
         type: integer
       title:
         type: string
@@ -136,7 +136,7 @@ paths:
       summary: Create label.
       tags:
       - labels
-  /labels/{id}:
+  /labels/{label_id}:
     get:
       description: Get label.
       parameters:
@@ -147,7 +147,7 @@ paths:
         type: string
       - description: Label ID
         in: path
-        name: id
+        name: label_id
         required: true
         type: string
       responses:
@@ -168,7 +168,7 @@ paths:
         type: string
       - description: Label ID
         in: path
-        name: id
+        name: label_id
         required: true
         type: string
       - description: Label
@@ -185,7 +185,7 @@ paths:
       summary: Update label.
       tags:
       - labels
-  /labels/{id}/tasks:
+  /labels/{label_id}/tasks:
     get:
       description: Get tasks for label.
       parameters:
@@ -196,7 +196,7 @@ paths:
         type: string
       - description: Label ID
         in: path
-        name: id
+        name: label_id
         required: true
         type: string
       responses:
@@ -207,51 +207,6 @@ paths:
               $ref: '#/definitions/server.getTaskResponse'
             type: array
       summary: Get tasks for label.
-      tags:
-      - labels
-  /labels/{id}/tasks/{task_id}:
-    delete:
-      description: Remove label from task.
-      parameters:
-      - description: Authorization
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: Label ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Task ID
-        in: path
-        name: task_id
-        required: true
-        type: string
-      responses: {}
-      summary: Remove label from task.
-      tags:
-      - labels
-    get:
-      description: Add label to task.
-      parameters:
-      - description: Authorization
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: Label ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Task ID
-        in: path
-        name: task_id
-        required: true
-        type: string
-      responses: {}
-      summary: Add label to task.
       tags:
       - labels
   /login:
@@ -302,7 +257,7 @@ paths:
       tags:
       - tasks
     post:
-      description: Create one task.
+      description: Create one task, time format - 2018-12-10T13:49:51.141Z.
       parameters:
       - description: Authorization
         in: header
@@ -319,7 +274,7 @@ paths:
       summary: Create task.
       tags:
       - tasks
-  /tasks/{id}:
+  /tasks/{task_id}:
     delete:
       description: Delete one task.
       parameters:
@@ -330,7 +285,7 @@ paths:
         type: string
       - description: Task ID
         in: path
-        name: id
+        name: task_id
         required: true
         type: string
       responses: {}
@@ -347,7 +302,7 @@ paths:
         type: string
       - description: Task ID
         in: path
-        name: id
+        name: task_id
         required: true
         type: string
       responses:
@@ -368,7 +323,7 @@ paths:
         type: string
       - description: Task ID
         in: path
-        name: id
+        name: task_id
         required: true
         type: string
       - description: Task
@@ -381,45 +336,9 @@ paths:
       summary: Update task.
       tags:
       - tasks
-  /tasks/{id}/complete:
-    post:
-      description: Complete one task.
-      parameters:
-      - description: Authorization
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: Task ID
-        in: path
-        name: id
-        required: true
-        type: string
-      responses: {}
-      summary: Complete task.
-      tags:
-      - tasks
-  /tasks/{id}/uncomplete:
-    post:
-      description: uncomplete one task.
-      parameters:
-      - description: Authorization
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: Task ID
-        in: path
-        name: id
-        required: true
-        type: string
-      responses: {}
-      summary: uncomplete task.
-      tags:
-      - tasks
   /tasks/{task_id}/comments:
     get:
-      description: Get comments by task.
+      description: Get comments for task by Task ID.
       parameters:
       - description: Authorization
         in: header
@@ -442,7 +361,7 @@ paths:
       tags:
       - comments
     post:
-      description: Create one comment.
+      description: Create comment for task by Task ID.
       parameters:
       - description: Authorization
         in: header
@@ -464,9 +383,9 @@ paths:
       summary: Create task comment.
       tags:
       - comments
-  /tasks/{task_id}/comments/{id}:
+  /tasks/{task_id}/comments/{comment_id}:
     delete:
-      description: Delete one comment.
+      description: Delete task comment by Task ID and Comment ID.
       parameters:
       - description: Authorization
         in: header
@@ -480,15 +399,15 @@ paths:
         type: string
       - description: Comment ID
         in: path
-        name: id
+        name: comment_id
         required: true
         type: string
       responses: {}
-      summary: Delete task comment.
+      summary: Delete comment from task.
       tags:
       - comments
     get:
-      description: Get one comment.
+      description: Get task comment by Task ID and Comment ID.
       parameters:
       - description: Authorization
         in: header
@@ -502,7 +421,7 @@ paths:
         type: string
       - description: Comment ID
         in: path
-        name: id
+        name: comment_id
         required: true
         type: string
       responses:
@@ -514,7 +433,7 @@ paths:
       tags:
       - comments
     put:
-      description: Update one comment.
+      description: Update task comment by Task ID and Comment ID.
       parameters:
       - description: Authorization
         in: header
@@ -528,7 +447,7 @@ paths:
         type: string
       - description: Comment ID
         in: path
-        name: id
+        name: comment_id
         required: true
         type: string
       - description: Comment
@@ -541,6 +460,88 @@ paths:
       summary: Update comment.
       tags:
       - comments
+  /tasks/{task_id}/complete:
+    post:
+      description: Complete one task.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      responses: {}
+      summary: Complete task.
+      tags:
+      - tasks
+  /tasks/{task_id}/labels/{label_id}:
+    post:
+      description: Add label to task.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      - description: Label ID
+        in: path
+        name: label_id
+        required: true
+        type: string
+      responses: {}
+      summary: Add label to task.
+      tags:
+      - tasks
+  /tasks/{task_id}/labels/{label_id}/:
+    delete:
+      description: Remove label from task.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      - description: Label ID
+        in: path
+        name: label_id
+        required: true
+        type: string
+      responses: {}
+      summary: Remove label from task.
+      tags:
+      - tasks
+  /tasks/{task_id}/uncomplete:
+    post:
+      description: uncomplete one task.
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      responses: {}
+      summary: uncomplete task.
+      tags:
+      - tasks
   /tasks/completed:
     get:
       description: Get all completed tasks.

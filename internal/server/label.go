@@ -26,7 +26,7 @@ func (s *Server) getLabels(c echo.Context) error {
 		return echo.ErrUnauthorized
 	}
 
-	labels, err := s.Database.GetLabels(userID)
+	labels, err := s.db.GetLabels(userID)
 	if err != nil {
 		log.Error(err)
 
@@ -79,7 +79,7 @@ func (s *Server) createLabel(c echo.Context) error {
 		log.Error(err)
 	}
 
-	if err := s.Database.CreateLabel(userID, label.Title); err != nil {
+	if err := s.db.CreateLabel(userID, label.Title); err != nil {
 		log.Error(err)
 
 		return echo.ErrInternalServerError
@@ -129,7 +129,7 @@ func (s *Server) updateLabel(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	if err := s.Database.UpdateLabel(int(label.ID), req.Title); err != nil {
+	if err := s.db.UpdateLabel(int(label.ID), req.Title); err != nil {
 		log.Error(err)
 
 		return echo.ErrInternalServerError
@@ -152,7 +152,7 @@ func (s *Server) deleteLabel(c echo.Context) error {
 		return echo.ErrUnauthorized
 	}
 
-	if err := s.Database.DeleteLabel(int(label.ID)); err != nil {
+	if err := s.db.DeleteLabel(int(label.ID)); err != nil {
 		log.Error(err)
 
 		return echo.ErrInternalServerError
@@ -176,7 +176,7 @@ func (s *Server) getTasksForLabel(c echo.Context) error {
 		return echo.ErrUnauthorized
 	}
 
-	tasks, err := s.Database.GetTasksByLabel(int(label.ID))
+	tasks, err := s.db.GetTasksByLabel(int(label.ID))
 	if err != nil {
 		log.Error(err)
 
@@ -197,7 +197,7 @@ func (s *Server) findLabel(c echo.Context) (*db.Label, error) {
 		return nil, err
 	}
 
-	label, err := s.Database.GetLabel(labelID)
+	label, err := s.db.GetLabel(labelID)
 	if err != nil {
 		return nil, err
 	}

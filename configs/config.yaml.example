@@ -1,7 +1,10 @@
 server:
-  listen: 0.0.0.0:80
+  listen: :80
+  jwt:
+    secret: secret
+    seconds_ttl: 3600
 database:
-  host: localhost
+  host: db
   port: 3306
   user: root
   password: root

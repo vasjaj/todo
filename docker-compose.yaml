@@ -1,17 +1,16 @@
 services:
   api:
-#    image: vasjajj/todo
-    build:
-      context: .
-      dockerfile: build/Dockerfile
+    image: vasjajj/todo
+#    build:
+#      context: .
+#      dockerfile: build/Dockerfile
+    restart: always
     ports:
       - 8080:80
     depends_on:
       - db
   db:
     image: mysql:8.0
-    cap_add:
-      - SYS_NICE
     restart: always
     environment:
       - MYSQL_DATABASE=todo
