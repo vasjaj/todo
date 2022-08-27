@@ -1,8 +1,5 @@
 server:
   listen: :80
-  jwt:
-    secret: secret
-    seconds_ttl: 3600
 database:
   host: db
   port: 3306

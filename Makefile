@@ -1,18 +1,16 @@
 docker-build:
-	docker build -f build/Dockerfile . -t todo
+	docker build -f build/Dockerfile . -t seamless
 
 docker-tag:
-	docker tag todo vasjajj/todo:latest
+	docker tag todo vasjajj/seamless:latest
 
 docker-push:
-	docker push vasjajj/todo:latest
+	docker push vasjajj/seamless:latest
 
 docker-upload: docker-build docker-tag docker-push
 
 docker-run-latest: docker-upload
-	docker run --pull=always -p 8080:80 vasjajj/todo
-
-make gen: swagger mocks
+	docker run --pull=always -p 8080:80 vasjajj/seamless
 
 test:
 	go test ./...
@@ -20,8 +18,6 @@ test:
 lint:
 	golangci-lint run
 
-swagger:
-	swag init -g internal/server/server.go
 
 mocks:
 	mockgen -source internal/db/db.go -destination internal/db/mock/mock_db.go

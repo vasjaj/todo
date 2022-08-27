@@ -1,10 +1,10 @@
 package config
 
 import (
+	"log"
 	"os"
 
 	"github.com/go-playground/validator"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
 
@@ -15,10 +15,6 @@ type Config struct {
 
 type Server struct {
 	Listen string `yaml:"listen" validate:"required"`
-	JWT    struct {
-		Secret     string `yaml:"secret" validate:"required"`
-		SecondsTTL int    `yaml:"seconds_ttl" validate:"required"`
-	} `yaml:"jwt"`
 }
 
 type Database struct {
@@ -38,7 +34,7 @@ func New(path string) (*Config, error) {
 	}
 	defer func(file *os.File) {
 		if err := file.Close(); err != nil {
-			log.Error(err)
+			log.Println("config file close error: ", err)
 		}
 	}(file)
 

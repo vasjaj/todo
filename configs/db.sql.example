@@ -1,0 +1,21 @@
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  name varchar(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE transactions (
+  id SERIAL PRIMARY KEY,
+  user_id BIGINT UNSIGNED NOT NULL,
+  caller_id integer NOT NULL,
+  reference varchar(255) NOT NULL UNIQUE,
+  withdraw integer NOT NULL,
+  deposit integer NOT NULL,
+  currency varchar(3) NOT NULL,
+  created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  reverted_at timestamp NULL,
+  CONSTRAINT users_id_fk FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+INSERT INTO users (name) VALUES ('FayeValentine');
+INSERT INTO users (name) VALUES ('SpikeSpiegel');
+INSERT INTO users (name) VALUES ('JetBlack');
