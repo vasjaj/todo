@@ -47,8 +47,8 @@ func (s *SeamlessService) GetBalance(_ *http.Request, req *GetBalanceRequest, re
 type WithdrawAndDepositRequest struct {
 	CallerId             int         `json:"callerId" validate:"required,numeric"`
 	PlayerName           string      `json:"playerName" validate:"required"`
-	Withdraw             int         `json:"withdraw" validate:"required,numeric"`
-	Deposit              int         `json:"deposit" validate:"required,numeric"`
+	Withdraw             int         `json:"withdraw" validate:"numeric"`
+	Deposit              int         `json:"deposit" validate:"numeric"`
 	Currency             string      `json:"currency" validate:"required,len=3"`
 	TransactionRef       string      `json:"transactionRef" validate:"required"`
 	GameRoundRef         string      `json:"gameRoundRef"`
@@ -101,10 +101,10 @@ type RollbackTransactionRequest struct {
 
 type RollbackTransactionResponse struct{}
 
-func (s *SeamlessService) RollbackTransaction(_ *http.Request, req *RollbackTransactionRequest, res *RollbackTransactionResponse) error {
+func (s *SeamlessService) RollbackTransaction(_ *http.Request, req *RollbackTransactionRequest, _ *RollbackTransactionResponse) error {
 	if err := validator.New().Struct(req); err != nil {
 		return err
 	}
 
-	return s.db.RollbackTransaction(req.PlayerName, req.TransactionRef)
+	return s.db.RollbackTransaction(req.CallerId, req.PlayerName, req.TransactionRef)
 }

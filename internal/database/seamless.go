@@ -20,21 +20,41 @@ type Transaction struct {
 	RevertedAt *time.Time
 }
 
-func (d *database) GetTransaction(playerName, transactionRef string) (Transaction, error) {
+func (d *database) GetBalance(playerName, currency string) (int, error) {
+	var balance sql.NullInt64
+	err := d.QueryRow(getBalanceQuery, playerName, currency).Scan(&balance)
+	if err != nil {
+		return 0, err
+	}
+	if !balance.Valid {
+		return 0, nil
+	}
+	return int(balance.Int64), nil
+}
+
+func getBalance(db *sql.Tx, playerName, currency string) (int, error) {
+	var balance sql.NullInt64
+	err := db.QueryRow(getBalanceQuery, playerName, currency).Scan(&balance)
+	if err != nil {
+		return 0, err
+	}
+	if !balance.Valid {
+		return 0, nil
+	}
+	return int(balance.Int64), nil
+}
+
+func getTransaction(db *sql.Tx, playerName, transactionRef string) (Transaction, error) {
 	var t Transaction
-	err := d.QueryRow(getTransactionQuery, playerName, transactionRef).Scan(
+	return t, db.QueryRow(getTransactionQuery, playerName, transactionRef).Scan(
 		&t.Id, &t.UserId, &t.CallerID, &t.Reference, &t.Withdraw, &t.Deposit, &t.Currency, &t.CreatedAt, &t.RevertedAt,
 	)
-	return t, err
 }
 
-func (d *database) GetBalance(playerName, currency string) (int, error) {
-	var balance int
-	err := d.QueryRow(getBalanceQuery, playerName, currency).Scan(&balance)
-	return balance, err
-}
-
-var ErrInsufficientFunds = errors.New("insufficient funds")
+var (
+	ErrInsufficientFunds   = errors.New("insufficient funds")
+	ErrTransactionReverted = errors.New("transaction reverted")
+)
 
 func (d *database) RegisterTransaction(
 	callerID, withdraw, deposit int, playerName, currency, transactionRef string,
@@ -50,32 +70,63 @@ func (d *database) RegisterTransaction(
 		}
 	}(tx)
 
-	var balance int
-	err = tx.QueryRow(getBalanceQuery, playerName, currency).Scan(&balance)
+	// проверяем существует ли транзакция
+	t, err := getTransaction(tx, playerName, transactionRef)
+	if err != nil && err != sql.ErrNoRows {
+		return Transaction{}, 0, err
+	}
+
+	// если транзакция существует, то проверяем не откачена ли она
+	if err == nil {
+		if t.RevertedAt != nil {
+			// если транзакция откачена, то возвращаем ошибку
+			return Transaction{}, 0, ErrTransactionReverted
+		} else {
+			// если транзакция не откачена, то про принципипу идемпотентности возвращаем её и текущий баланс
+			balance, err := getBalance(tx, playerName, currency)
+			if err != nil {
+				return Transaction{}, 0, err
+			}
+
+			if err = tx.Commit(); err != nil {
+				return Transaction{}, 0, err
+			}
+
+			return Transaction{}, balance, nil
+		}
+	}
+
+	// если транзакции не существует, то проверяем можно ли её провести
+	balance, err := getBalance(tx, playerName, currency)
 	if err != nil {
 		return Transaction{}, 0, err
 	}
 
+	// недостаточно средств - не можем провести транзакцию
 	if balance < withdraw {
 		return Transaction{}, 0, ErrInsufficientFunds
 	}
 
+	// регистрируем транзакцию
 	if _, err = tx.Exec(registerTransactionQuery, playerName, callerID, transactionRef, withdraw, deposit, currency); err != nil {
 		return Transaction{}, 0, err
 	}
 
-	var t Transaction
-	if err = tx.QueryRow(getTransactionQuery, playerName, transactionRef).Scan(
-		&t.Id, &t.UserId, &t.CallerID, &t.Reference, &t.Withdraw, &t.Deposit, &t.Currency, &t.CreatedAt, &t.RevertedAt,
-	); err != nil {
+	// получаем id транзакции
+	t, err = getTransaction(tx, playerName, transactionRef)
+	if err != nil {
 		return Transaction{}, 0, err
 	}
+
+	// получаем текущий баланс
+	resultBalance := balance - withdraw + deposit
 
 	if err = tx.Commit(); err != nil {
 		return Transaction{}, 0, err
 	}
 
-	return t, balance - withdraw + deposit, err
+	// возвращаем баланс после транзакции и саму транзакцию для "transactionId"
+	return t, resultBalance, nil
 }
 
 func (d *database) RollbackTransaction(callerId int, playerName, transactionRef string) error {
@@ -90,19 +141,25 @@ func (d *database) RollbackTransaction(callerId int, playerName, transactionRef 
 		}
 	}(tx)
 
-	var exists bool
-	err = tx.QueryRow(existsTransactionQuery, playerName, transactionRef).Scan(&exists)
+	// проверяем существует ли транзакция
+	var t Transaction
+	t, err = getTransaction(tx, playerName, transactionRef)
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
 
-	if exists {
-		if _, err = tx.Exec(rollbackTransactionQuery, playerName, transactionRef); err != nil {
+	if err == sql.ErrNoRows {
+		// если транзакции не существует, то регистрируем её как откаченную
+		if _, err = tx.Exec(registerRevertedTransactionQuery, playerName, callerId, transactionRef); err != nil {
 			return err
 		}
 	} else {
-		if _, err = tx.Exec(registerTransactionQuery, playerName, callerId, transactionRef, 0, 0); err != nil {
-			return err
+		// если транзакция существует, то откачиваем ее в том слуае если она не откачена
+		// если уже откачена, то ничего не делаем
+		if t.RevertedAt == nil {
+			if _, err = tx.Exec(rollbackTransactionQuery, playerName, transactionRef); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -114,9 +171,6 @@ func (d *database) RollbackTransaction(callerId int, playerName, transactionRef 
 }
 
 const (
-	existsTransactionQuery = `
-	SELECT EXISTS(SELECT 1 FROM transactions WHERE user_id = (SELECT id FROM users WHERE name = ?) AND reference = ?)`
-
 	getTransactionQuery = `
 	SELECT id, user_id, caller_id, reference, withdraw, deposit, currency, created_at, reverted_at
 	FROM transactions
@@ -131,6 +185,10 @@ const (
 	registerTransactionQuery = `
 	INSERT INTO transactions (user_id, caller_id, reference, withdraw, deposit, currency)
 	VALUES ((SELECT id FROM users WHERE name = ?), ?, ?, ?, ?, ?)`
+
+	registerRevertedTransactionQuery = `
+	INSERT INTO transactions (user_id, caller_id, reference, withdraw, deposit, currency, reverted_at)
+	VALUES ((SELECT id FROM users WHERE name = ?), ?, ?, 0, 0, 'USD', NOW())`
 
 	rollbackTransactionQuery = `
 	UPDATE transactions

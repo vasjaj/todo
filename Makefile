@@ -20,7 +20,7 @@ lint:
 
 
 mocks:
-	mockgen -source internal/db/db.go -destination internal/db/mock/mock_db.go
+	mockgen -source internal/database/database.go -destination internal/database/mock/mock_database.go
 
 run:
 	docker-compose up

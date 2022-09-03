@@ -10,7 +10,6 @@ type Database interface {
 	Close() error
 	RegisterTransaction(callerID, withdraw, deposit int, playerName, currency, transactionRef string) (Transaction, int, error)
 	GetBalance(playerName, currency string) (int, error)
-	GetTransaction(playerName, transactionRef string) (Transaction, error)
 	RollbackTransaction(callerId int, playerName, transactionRef string) error
 }
 
